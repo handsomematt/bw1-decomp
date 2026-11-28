@@ -63,4 +63,9 @@ struct LH3DVRAMTex
 };
 static_assert(sizeof(LH3DVRAMTex::PixelFormat) == 0x24, "Data type is of wrong size");
 
+// BW1W120 0085e320 BW1M119 010d07a0 (LHCombined Release)
+void LeaveOnly3_555();
+// BW1W120 0085e3a0 BW1M119 010d0630 (LHCombined Release)
+void CreateAtLeastN555(int count);
+
 #endif /* BW1_DECOMP_LH3D_VRAM_TEX_INCLUDED_H */

@@ -1133,7 +1133,7 @@ GGame::GGame()
 	StartType = GAME_START_TYPE_AUTOSAVE;
 	GameMode = GAME_MODE_RUNNING;
 	InitializeCriticalSection(&VideoTimerSection);
-	InitializeCriticalSection(&LHVideoPlayer::CriticalSection);
+	InitializeCriticalSection(&VideoSection);
 	LH3DRender::RegisterFinishFrameCallback(0x8000, true, LHVideoPlayer::thedraw, NULL);
 	CPController::Init();
 	LHSys::TheSystem.keyboard.Callback = KeyHandler;
@@ -1234,7 +1234,7 @@ void GGame::ToBeDeleted(int delete_now)
 	LeaveVideoSection();
 	EnterCriticalSection(&VideoTimerSection);
 	LeaveCriticalSection(&VideoTimerSection);
-	DeleteCriticalSection(&LHVideoPlayer::CriticalSection);
+	DeleteCriticalSection(&VideoSection);
 	DeleteCriticalSection(&VideoTimerSection);
 	Flags |= GAME_THING_FLAG_UNAVAILABLE;
 	delete field_0x250094;
