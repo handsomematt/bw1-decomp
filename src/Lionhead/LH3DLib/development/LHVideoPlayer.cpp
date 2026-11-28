@@ -29,9 +29,25 @@ extern "C"
 #define LH_VIDEO_PLAYER_Z          (1.0f - 0.99f)
 #define LH_VIDEO_PLAYER_RHW        0.99f
 
+#define LH_VIDEO_PLAYER_4444_ALPHA_MASK 0xf000
+#define LH_VIDEO_PLAYER_4444_RED_MASK   0xf00
+#define LH_VIDEO_PLAYER_4444_GREEN_MASK 0xf0
+#define LH_VIDEO_PLAYER_4444_BLUE_MASK  0xf
+#define LH_VIDEO_PLAYER_1555_ALPHA_MASK 0x8000
+#define LH_VIDEO_PLAYER_555_RED_MASK    0x7c00
+#define LH_VIDEO_PLAYER_555_GREEN_MASK  0x3e0
+#define LH_VIDEO_PLAYER_555_BLUE_MASK   0x1f
+#define LH_VIDEO_PLAYER_565_RED_MASK    0xf800
+#define LH_VIDEO_PLAYER_565_GREEN_MASK  0x7e0
+#define LH_VIDEO_PLAYER_565_BLUE_MASK   0x1f
+
 #ifdef VERSION_BW1WCI
 // Creature Isle plays numbered JPEG files instead of a Bink video.
 #define LH_VIDEO_PLAYER_FRAME_FILE_NAME "%s%d.jpg"
+
+#define LH_VIDEO_PLAYER_RGB4444(r, g, b) ((((r) >> 4) << 8) | (((g) >> 4) << 4) | ((b) >> 4))
+#define LH_VIDEO_PLAYER_RGB565(r, g, b)  ((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3))
+#define LH_VIDEO_PLAYER_RGB555(r, g, b)  ((((r) >> 3) << 10) | (((g) >> 3) << 5) | ((b) >> 3))
 
 enum LH_VIDEO_PLAYER_JPEG_FORMAT
 {
@@ -147,7 +163,7 @@ void LHVideoPlayer::Close()
 			{
 				Materials[i]->Release();
 			}
-			delete Materials;
+			delete[] Materials;
 			Materials = NULL;
 		}
 		if (Textures)
@@ -156,7 +172,7 @@ void LHVideoPlayer::Close()
 			{
 				Textures[i]->Release();
 			}
-			delete Textures;
+			delete[] Textures;
 			Textures = NULL;
 		}
 		if (BlurMaterial)
@@ -169,7 +185,7 @@ void LHVideoPlayer::Close()
 			BlurTexture->Release();
 			BlurTexture = NULL;
 		}
-		delete Buffer;
+		delete[] Buffer;
 	}
 	SetZero();
 }
@@ -221,7 +237,7 @@ inline void LoadJpeg(char* file_name, uint16_t* dest, int* width, int* height, L
 			{
 				for (JDIMENSION x = 0; x < info.output_width; x++)
 				{
-					*out++ = ((pixel[0] >> 4) << 8) | ((pixel[1] >> 4) << 4) | (pixel[2] >> 4);
+					*out++ = LH_VIDEO_PLAYER_RGB4444(pixel[0], pixel[1], pixel[2]);
 					pixel += info.output_components;
 				}
 			}
@@ -229,7 +245,7 @@ inline void LoadJpeg(char* file_name, uint16_t* dest, int* width, int* height, L
 			{
 				for (JDIMENSION x = 0; x < info.output_width; x++)
 				{
-					*out++ = ((pixel[0] >> 3) << 11) | ((pixel[1] >> 2) << 5) | (pixel[2] >> 3);
+					*out++ = LH_VIDEO_PLAYER_RGB565(pixel[0], pixel[1], pixel[2]);
 					pixel += info.output_components;
 				}
 			}
@@ -237,7 +253,7 @@ inline void LoadJpeg(char* file_name, uint16_t* dest, int* width, int* height, L
 			{
 				for (JDIMENSION x = 0; x < info.output_width; x++)
 				{
-					*out++ = ((pixel[0] >> 3) << 10) | ((pixel[1] >> 3) << 5) | (pixel[2] >> 3);
+					*out++ = LH_VIDEO_PLAYER_RGB555(pixel[0], pixel[1], pixel[2]);
 					pixel += info.output_components;
 				}
 			}
@@ -398,7 +414,7 @@ uint16_t BlurPixels(uint16_t* pixels, int pitch, int red_mask, int green_mask, i
 		         (p5 & green_mask) + (p6 & green_mask) + (p7 & green_mask);
 		blue += (p0 & blue_mask) + (p1 & blue_mask) + (p2 & blue_mask) + (p3 & blue_mask) + (p4 & blue_mask) +
 		        (p5 & blue_mask) + (p6 & blue_mask) + (p7 & blue_mask);
-		pixels += 8;
+		pixels += LH_VIDEO_PLAYER_BLUR_SIZE / 2;
 		p7 = pixels[7];
 		p6 = pixels[6];
 		p5 = pixels[5];
@@ -413,7 +429,7 @@ uint16_t BlurPixels(uint16_t* pixels, int pitch, int red_mask, int green_mask, i
 		         (p5 & green_mask) + (p6 & green_mask) + (p7 & green_mask);
 		blue += (p0 & blue_mask) + (p1 & blue_mask) + (p2 & blue_mask) + (p3 & blue_mask) + (p4 & blue_mask) +
 		        (p5 & blue_mask) + (p6 & blue_mask) + (p7 & blue_mask);
-		pixels += pitch - 8;
+		pixels += pitch - LH_VIDEO_PLAYER_BLUR_SIZE / 2;
 	}
 	return ((red >> 8) & red_mask) + ((green >> 8) & green_mask) + ((blue >> 8) & blue_mask) + alpha;
 }
@@ -448,7 +464,7 @@ void LHVideoPlayer::CopyToTextures()
 						uint16_t* pixel = source;
 						for (int x = 0; x < width; x++)
 						{
-							*pixel++ |= 0xf000;
+							*pixel++ |= LH_VIDEO_PLAYER_4444_ALPHA_MASK;
 						}
 					}
 					memcpy(dest, source, width * sizeof(uint16_t));
@@ -477,24 +493,24 @@ void LHVideoPlayer::CopyToTextures()
 			if (LH3DTexture::g_b_use_565)
 			{
 				alpha = 0;
-				red_mask = 0xf800;
-				green_mask = 0x7e0;
-				blue_mask = 0x1f;
+				red_mask = LH_VIDEO_PLAYER_565_RED_MASK;
+				green_mask = LH_VIDEO_PLAYER_565_GREEN_MASK;
+				blue_mask = LH_VIDEO_PLAYER_565_BLUE_MASK;
 			}
 			else
 			{
-				alpha = 0x8000;
-				red_mask = 0x7c00;
-				green_mask = 0x3e0;
-				blue_mask = 0x1f;
+				alpha = LH_VIDEO_PLAYER_1555_ALPHA_MASK;
+				red_mask = LH_VIDEO_PLAYER_555_RED_MASK;
+				green_mask = LH_VIDEO_PLAYER_555_GREEN_MASK;
+				blue_mask = LH_VIDEO_PLAYER_555_BLUE_MASK;
 			}
 		}
 		else
 		{
-			alpha = 0xf000;
-			red_mask = 0xf00;
-			green_mask = 0xf0;
-			blue_mask = 0xf;
+			alpha = LH_VIDEO_PLAYER_4444_ALPHA_MASK;
+			red_mask = LH_VIDEO_PLAYER_4444_RED_MASK;
+			green_mask = LH_VIDEO_PLAYER_4444_GREEN_MASK;
+			blue_mask = LH_VIDEO_PLAYER_4444_BLUE_MASK;
 		}
 		uint16_t* dest = BlurTexture->GetSRamTex()->Lock256x256(true);
 		if (dest)
