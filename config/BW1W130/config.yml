@@ -571,6 +571,8 @@ block_relocations:
 # LH3DPrimitive::DrawSpecialLight's 0xffffff is an immediate, not an address in 1.30's larger image.
   - source: 0x008621D6
   - source: 0x00862402
+# LH3DVRAMTex::LoadInVRAM's DDBLT_WAIT flag 0x1000000 is an immediate, not a pointer.
+  - source: 0x00862D8B
 # The 0x00FF0000 channel masks in TextureRef::DrawCutAroundIntersectionPoint read as addresses inside NewCols.
   - source: 0x0086C35E
   - source: 0x0086C364
