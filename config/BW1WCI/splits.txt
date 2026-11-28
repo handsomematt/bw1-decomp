@@ -4380,8 +4380,13 @@ Lionhead/LH3DLib/development/LH3DDivers.cpp:
 	.rdata      start:0x00A13A68 end:0x00A13CE0
 	.xdata$x    start:0x00A2F6A0 end:0x00A2F7B8 align:4
 	.CRT$XCU    start:0x00A375A0 end:0x00A375E4 align:4
-	.data       start:0x00CAB6D0 end:0x00CABCC0
+	.data       start:0x00CAB6D0 end:0x00CABC6C
 	.bss        start:0x00F2E830 end:0x00F3E420 align:8
+
+Lionhead/LH3DLib/development/LH3DMem.cpp:
+	.text       start:0x008482F0 end:0x00848450
+	.data       start:0x00CABC6C end:0x00CABCBA
+	.bss        start:0x00F3E420 end:0x00F3E438
 
 Lionhead/LH3DLib/development/LH3DRender.cpp:
 	.text       start:0x00848450 end:0x0084D470

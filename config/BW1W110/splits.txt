@@ -4372,7 +4372,8 @@ Lionhead/LH3DLib/development/LH3DVideo.cpp:
 
 Lionhead/LH3DLib/development/LH3DMem.cpp:
 	.text       start:0x00832AF0 end:0x00832C50
-	.data       start:0x00C27F64 end:0x00C27FC4
+	.data       start:0x00C27F64 end:0x00C27FB2
+	.bss        start:0x00EE4F04 end:0x00EE4F1C
 
 Lionhead/LH3DLib/development/LH3DWay.cpp:
 	.text       start:0x00832C50 end:0x00834430
@@ -4383,7 +4384,7 @@ Lionhead/LH3DLib/development/LH3DWay.cpp:
 Lionhead/LH3DLib/development/Font.cpp:
 	.text       start:0x00834430 end:0x00834A90
 	.text$x     start:0x00898050 end:0x00898070 align:4
-	.data       start:0x00C27FC4 end:0x00C28000
+	.data       start:0x00C27FB4 end:0x00C28000
 
 Lionhead/LH3DLib/development/LHVideoPlayer.cpp:
 	.text       start:0x00834A90 end:0x008359B0

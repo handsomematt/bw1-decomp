@@ -5,6 +5,8 @@
 #include <string.h>    /* For memset */
 #include <re_common.h> /* For bool32_t */
 
+#define LH3D_MEM_MAGIC 0x51627384
+
 struct LH3DMem
 {
 	// BW1W120 00ef6540 BW1M119 011e36cc (LHCombined Release)
@@ -17,6 +19,8 @@ struct LH3DMem
 	static uint32_t g_current_amount;
 	// BW1W120 00ef6550 BW1M119 011e36bc (LHCombined Release)
 	static bool32_t g_open;
+	// BW1W120 00ef653c BW1M119 011e36b8 (LHCombined Release)
+	static bool32_t g_panic;
 
 	// Static methods
 

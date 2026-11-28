@@ -1708,7 +1708,7 @@ config.libs = [
             LH3DLibObject(NonMatching, "Lionhead/LH3DLib/development/LH3DMath.cpp"),
             LH3DLibObject(Matching, "Lionhead/LH3DLib/development/LH3DMenu.cpp", extra_cflags=["/GR-"], pch=True),
             LH3DLibObject(Matching, "Lionhead/LH3DLib/development/LH3DVideo.cpp", pch=True),
-            LH3DLibObject(NonMatching, "Lionhead/LH3DLib/development/LH3DMem.cpp"),
+            LH3DLibObject(Matching, "Lionhead/LH3DLib/development/LH3DMem.cpp"),
             LH3DLibObject(NonMatching, "Lionhead/LH3DLib/development/LH3DWay.cpp"),
             LH3DLibObject(NonMatching, "Lionhead/LH3DLib/development/Font.cpp"),
             LH3DLibObject(NonMatching, "Lionhead/LH3DLib/development/LHVideoPlayer.cpp"),
