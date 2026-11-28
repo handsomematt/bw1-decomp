@@ -4497,11 +4497,12 @@ Lionhead/LH3DLib/development/Font.cpp:
 	.data       start:0x00CAC720 end:0x00CAC768
 
 Lionhead/LH3DLib/development/LHVideoPlayer.cpp:
-	.text       start:0x008621E0 end:0x00863510
-	.data       start:0x00CAC768 end:0x00CAC800
+	.text       start:0x008621E0 end:0x008634A0
+	.data       start:0x00CAC768 end:0x00CAC7FD
+	.bss        start:0x00F7BE50 end:0x00F7BE7C
 
 Lionhead/LH3DLib/development/Blob.cpp:
-	.text       start:0x00863510 end:0x00863FF0
+	.text       start:0x008634A0 end:0x00863FF0
 	.rdata      start:0x00A13ED4 end:0x00A13ED8
 	.CRT$XCU    start:0x00A37618 end:0x00A37620 align:4
 	.data       start:0x00CAC800 end:0x00CAC810

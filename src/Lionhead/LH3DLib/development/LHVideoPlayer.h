@@ -25,14 +25,18 @@ struct LH3DTexture;
 class LHVideoPlayer
 {
 public:
-	int            Width;
-	int            Height;
-	int            FrameRate;
-	int            TotalFrames;
-	int            CurrentFrame; /* 0x10 */
-	bool32_t       IsOpen;
-	bool           HiColour;
-	HBINK          Bink; /* 0x1c */
+	int      Width;
+	int      Height;
+	int      FrameRate;
+	int      TotalFrames;
+	int      CurrentFrame; /* 0x10 */
+	bool32_t IsOpen;
+	bool     HiColour;
+	HBINK    Bink; /* 0x1c */
+#ifdef VERSION_BW1WCI
+	int  LastFrame;
+	char FileName[256];
+#endif
 	bool32_t       FrameDecoded;
 	int            TextureCount;
 	int            TexturesWide;
@@ -97,7 +101,11 @@ public:
 	// BW1W120 008456c0 BW1M119 010cbc60 (LHCombined Release)
 	void DrawToScreen(LH3DColor color, int x, int y, int width, int height, bool z_write, bool alpha);
 };
+#ifdef VERSION_BW1WCI
+static_assert(sizeof(LHVideoPlayer) == 0x16c, "Data type is of wrong size");
+#else
 static_assert(sizeof(LHVideoPlayer) == 0x68, "Data type is of wrong size");
+#endif
 
 // BW1W120 00ef74f8 BW1M119 013421f4 (LHCombined Release)
 extern CRITICAL_SECTION VideoSection;

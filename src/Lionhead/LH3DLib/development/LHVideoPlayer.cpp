@@ -9,6 +9,16 @@
 
 #include <Lionhead/LHAudio/ver7.0/LH_AudioSystem.h> /* For class LH_AudioSystem */
 #include <Lionhead/LHLib/ver5.0/LHSystem.h>         /* For struct LHSys */
+#ifdef VERSION_BW1WCI
+#include <Lionhead/LHFile/ver3.0/LHOSFile.h> /* For LHOSFile::Exists */
+
+// Windows already defines INT32.
+#define XMD_H
+extern "C"
+{
+#include <jpeg/jpeglib.h>
+}
+#endif
 
 // The 555 textures kept in video memory while a video is playing.
 #define LH_VIDEO_PLAYER_555_COUNT 8
@@ -18,6 +28,18 @@
 #define LH_VIDEO_PLAYER_HALF_TEXEL (0.5f / LH_VIDEO_PLAYER_TEXTURE_SIZE)
 #define LH_VIDEO_PLAYER_Z          (1.0f - 0.99f)
 #define LH_VIDEO_PLAYER_RHW        0.99f
+
+#ifdef VERSION_BW1WCI
+// Creature Isle plays numbered JPEG files instead of a Bink video.
+#define LH_VIDEO_PLAYER_FRAME_FILE_NAME "%s%d.jpg"
+
+enum LH_VIDEO_PLAYER_JPEG_FORMAT
+{
+	LH_VIDEO_PLAYER_JPEG_FORMAT_4444,
+	LH_VIDEO_PLAYER_JPEG_FORMAT_555,
+	LH_VIDEO_PLAYER_JPEG_FORMAT_565,
+};
+#endif
 
 enum LH_VIDEO_PLAYER_STATE
 {
@@ -49,7 +71,9 @@ uint16_t BlurPixels(uint16_t* pixels, int pitch, int red_mask, int green_mask, i
 
 void LHVideoPlayer::InitAudio(LH_AudioSystem* audio_system)
 {
+#ifndef VERSION_BW1WCI
 	BinkSetSoundSystem(BinkOpenDirectSound, (unsigned long)audio_system->LHWaveGetQMixerDirectSoundObject());
+#endif
 }
 
 void EnterVideoSection()
@@ -110,10 +134,12 @@ void LHVideoPlayer::Close()
 	if (IsOpen)
 	{
 		IsOpen = false;
+#ifndef VERSION_BW1WCI
 		if (Bink)
 		{
 			BinkClose(Bink);
 		}
+#endif
 		Bink = NULL;
 		if (Materials)
 		{
@@ -159,14 +185,95 @@ void __stdcall LHVideoPlayer::thedraw(void* context)
 	}
 }
 
+#ifdef VERSION_BW1WCI
+inline void LoadJpeg(char* file_name, uint16_t* dest, int* width, int* height, LH_VIDEO_PLAYER_JPEG_FORMAT format)
+{
+	jpeg_decompress_struct info;
+	jpeg_error_mgr         error;
+	info.err = jpeg_std_error(&error);
+	FILE* file = fopen(file_name, "rb");
+	if (file == NULL)
+	{
+		return;
+	}
+	jpeg_create_decompress(&info);
+	jpeg_stdio_src(&info, file);
+	jpeg_read_header(&info, TRUE);
+	jpeg_start_decompress(&info);
+	if (height)
+	{
+		*height = info.output_height;
+	}
+	if (width)
+	{
+		*width = info.output_width;
+	}
+	uint16_t*  out = dest;
+	int        row_stride = info.output_width * info.output_components;
+	JSAMPARRAY line = (*info.mem->alloc_sarray)((j_common_ptr)&info, JPOOL_IMAGE, row_stride, 1);
+	while (info.output_scanline < info.output_height)
+	{
+		jpeg_read_scanlines(&info, line, 1);
+		JSAMPLE* pixel = line[0];
+		if (dest)
+		{
+			if (format == LH_VIDEO_PLAYER_JPEG_FORMAT_4444)
+			{
+				for (JDIMENSION x = 0; x < info.output_width; x++)
+				{
+					*out++ = ((pixel[0] >> 4) << 8) | ((pixel[1] >> 4) << 4) | (pixel[2] >> 4);
+					pixel += info.output_components;
+				}
+			}
+			else if (format == LH_VIDEO_PLAYER_JPEG_FORMAT_565)
+			{
+				for (JDIMENSION x = 0; x < info.output_width; x++)
+				{
+					*out++ = ((pixel[0] >> 3) << 11) | ((pixel[1] >> 2) << 5) | (pixel[2] >> 3);
+					pixel += info.output_components;
+				}
+			}
+			else if (format == LH_VIDEO_PLAYER_JPEG_FORMAT_555)
+			{
+				for (JDIMENSION x = 0; x < info.output_width; x++)
+				{
+					*out++ = ((pixel[0] >> 3) << 10) | ((pixel[1] >> 3) << 5) | (pixel[2] >> 3);
+					pixel += info.output_components;
+				}
+			}
+		}
+	}
+	jpeg_finish_decompress(&info);
+	jpeg_destroy_decompress(&info);
+	fclose(file);
+}
+#endif
+
 void LHVideoPlayer::Init(char* file_name, bool hi_colour, bool make_blur_texture)
 {
 	Close();
+#ifdef VERSION_BW1WCI
+	Bink = NULL;
+	CurrentFrame = 1;
+	strcpy(FileName, file_name);
+	char path[256];
+	sprintf(path, LH_VIDEO_PLAYER_FRAME_FILE_NAME, file_name, CurrentFrame);
+	if (LHOSFile::Exists(path) == LH_FILE_RESULT_OK)
+	{
+		Bink = (HBINK) true;
+		LoadJpeg(path, NULL, &Width, &Height, LH_VIDEO_PLAYER_JPEG_FORMAT_4444);
+		TotalFrames = 1;
+		CurrentFrame = -1;
+		LastFrame = -1;
+	}
+#else
 	Bink = BinkOpen(file_name, BINKNOTHREADEDIO | BINKNOSKIP);
+#endif
 	HiColour = hi_colour;
 	FrameRate = 1;
 	if (Bink)
 	{
+#ifndef VERSION_BW1WCI
 		BINKSUMMARY summary;
 		BinkGetSummary(Bink, &summary);
 		FrameRate = summary.FileFrameRate / summary.FileFrameRateDiv;
@@ -174,6 +281,7 @@ void LHVideoPlayer::Init(char* file_name, bool hi_colour, bool make_blur_texture
 		Width = summary.Width;
 		Height = summary.Height;
 		CurrentFrame = 0;
+#endif
 		TexturesWide = (Width + LH_VIDEO_PLAYER_TEXTURE_SIZE - 1) / LH_VIDEO_PLAYER_TEXTURE_SIZE;
 		TexturesHigh = (Height + LH_VIDEO_PLAYER_TEXTURE_SIZE - 1) / LH_VIDEO_PLAYER_TEXTURE_SIZE;
 		TextureCount = TexturesWide * TexturesHigh;
@@ -229,6 +337,22 @@ void LHVideoPlayer::Init(char* file_name, bool hi_colour, bool make_blur_texture
 
 void LHVideoPlayer::UnpackNextFrame()
 {
+#ifdef VERSION_BW1WCI
+	if (LastFrame != CurrentFrame)
+	{
+		LastFrame = CurrentFrame;
+		char path[256];
+		sprintf(path, LH_VIDEO_PLAYER_FRAME_FILE_NAME, FileName, CurrentFrame);
+		if (LHOSFile::Exists(path) == LH_FILE_RESULT_OK)
+		{
+			LoadJpeg(path, Buffer, &Width, &Height,
+			         HiColour ? (LH3DTexture::g_b_use_565 ? LH_VIDEO_PLAYER_JPEG_FORMAT_565
+			                                              : LH_VIDEO_PLAYER_JPEG_FORMAT_555)
+			                  : LH_VIDEO_PLAYER_JPEG_FORMAT_4444);
+		}
+		CopyToTextures();
+	}
+#else
 	if (Bink)
 	{
 		if (CurrentFrame <= TotalFrames)
@@ -249,6 +373,7 @@ void LHVideoPlayer::UnpackNextFrame()
 		}
 		CurrentFrame++;
 	}
+#endif
 }
 
 uint16_t BlurPixels(uint16_t* pixels, int pitch, int red_mask, int green_mask, int blue_mask, int alpha)
