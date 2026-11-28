@@ -4777,6 +4777,7 @@ Lionhead/LH3DLib/development/LH3DPrimitive.cpp:
 Lionhead/LH3DLib/development/LH3DVRAMTex.cpp:
 	.text       start:0x0085D7F0 end:0x0085E480
 	.data       start:0x00C392C0 end:0x00C394D0
+	.bss        start:0x00F05190 end:0x00F05220
 
 Lionhead/LH3DLib/development/CAnim.cpp:
 	.text       start:0x0085E480 end:0x008629D0

@@ -17,6 +17,8 @@ struct TextureFormat
 	int GetHeight();
 	// BW1W120 00838560 BW1M119 010c8b30 (LHCombined Release)
 	int GetMaxMipMapLevel();
+	// BW1W120 inlined BW1M119 010d0b30 (LHCombined Release)
+	int GetPixelFormat();
 };
 static_assert(sizeof(TextureFormat) == 0x4, "Data type is of wrong size");
 
