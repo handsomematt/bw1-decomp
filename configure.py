@@ -319,6 +319,14 @@ if config.version == "BW1W100":
         "__imp_?LHSampleSet3DPosition@LH_AudioSystem@@QAEPAULH_SampleInfo@@PAVLH_AudioBank@@KKMMMH@Z",
     ]:
         config.base_ldflags.append(f"/alternatename:{_dead_import}=__imp__ExitProcess@4")
+    # LHVideoPlayer::InitAudio has no callers in 1.00; /OPT:REF dropped it and the Bink
+    # and LHAudio imports only it calls.
+    for _dead_import in [
+        "__imp__BinkSetSoundSystem@8",
+        "__imp__BinkOpenDirectSound@4",
+        "__imp_?LHWaveGetQMixerDirectSoundObject@LH_AudioSystem@@QAEPAXXZ",
+    ]:
+        config.base_ldflags.append(f"/alternatename:{_dead_import}=__imp__ExitProcess@4")
     # UniverseRoom's destructor has no callers in 1.00; /OPT:REF dropped it and
     # PictureRoomBase's, which only it calls.
     config.base_ldflags.append("/alternatename:??1PictureRoomBase@@QAE@XZ=_abort")
